@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: get the caller's role from their users document
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return request.auth != null && role() == 'admin';
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ── users ────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Any signed-in user can read their own profile; admin reads all
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      // Only the user themselves can create their profile at sign-up
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      // Only admin can update role; user can update their own display name/email
+      allow update: if isAdmin()
+                    || (isSignedIn() && request.auth.uid == uid
+                        && !('role' in request.resource.data.diff(resource.data).affectedKeys()));
+      allow delete: if isAdmin();
+    }
+
+    // ── rooms ─────────────────────────────────────────────────────────────
+    match /rooms/{roomId} {
+      allow read: if isSignedIn()
+                  && (isAdmin() || request.auth.uid in resource.data.memberIds);
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      // ── messages (sub-collection) ──────────────────────────────────────
+      match /messages/{messageId} {
+        allow read: if isSignedIn()
+                    && (isAdmin()
+                        || request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.memberIds);
+
+        // Only room members can send; senderId must match their uid
+        allow create: if isSignedIn()
+                      && request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.memberIds
+                      && request.resource.data.senderId == request.auth.uid;
+
+        // Only admin can delete messages
+        allow delete: if isAdmin();
+        allow update: if false;
+      }
+    }
+  }
+}
