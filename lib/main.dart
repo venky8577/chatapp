@@ -5,23 +5,22 @@ import 'firebase_options.dart';
 import 'controllers/auth_controller.dart';
 import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
-//satheesh
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const ChatApp());
+  runApp(const HostelApp());
 }
 
-class ChatApp extends StatelessWidget {
-  const ChatApp({super.key});
+class HostelApp extends StatelessWidget {
+  const HostelApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'ChatApp',
+      title: 'SVH Hostel',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       initialRoute: AppRoutes.splash,

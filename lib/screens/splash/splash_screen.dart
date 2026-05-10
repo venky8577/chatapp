@@ -11,8 +11,21 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.chat_bubble_rounded, size: 72, color: Color(0xFF6C63FF)),
-            SizedBox(height: 24),
+            Icon(Icons.apartment_rounded, size: 72, color: Color(0xFF6C63FF)),
+            SizedBox(height: 16),
+            Text(
+              'SVH Hostel',
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'Maintenance Portal',
+              style: TextStyle(fontSize: 13, color: Colors.white54),
+            ),
+            SizedBox(height: 32),
             CircularProgressIndicator(color: Color(0xFF6C63FF)),
           ],
         ),

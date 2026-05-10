@@ -1,7 +1,14 @@
 {
   "rules": {
+    "config": {
+      "adminPhones": {
+        ".read": "auth != null",
+        ".write": false
+      }
+    },
     "users": {
       ".read": "auth != null",
+      ".indexOn": ["role"],
       "$uid": {
         ".write": "auth != null && auth.uid == $uid"
       }

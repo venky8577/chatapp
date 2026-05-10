@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
@@ -11,11 +10,14 @@ class AuthController extends GetxController {
   final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
   final RxBool isLoading = false.obs;
 
+  // Held between OTP sign-in and name setup for new users
+  String _pendingPhone = '';
+  String _pendingRole = '';
+
   @override
   void onInit() {
     super.onInit();
-    _authService.authStateChanges.listen(
-        (User? u) => _onAuthStateChanged(u));
+    _authService.authStateChanges.listen(_onAuthStateChanged);
   }
 
   Future<void> _onAuthStateChanged(User? firebaseUser) async {
@@ -24,60 +26,54 @@ class AuthController extends GetxController {
       if (Get.currentRoute != AppRoutes.login) {
         Get.offAllNamed(AppRoutes.login);
       }
-    } else {
-      UserModel? profile =
-          await _authService.fetchUserProfile(firebaseUser.uid);
+      return;
+    }
 
-      // profile లేకపోతే (new signup race condition) — fallback UserModel
+    isLoading.value = true;
+    try {
+      final adminPhones = await _authService.fetchAdminPhones();
+      final phone = firebaseUser.phoneNumber ?? '';
+      final role = adminPhones.contains(phone) ? 'admin' : 'student';
+
+      final profile = await _authService.fetchUserProfile(firebaseUser.uid);
+
       if (profile == null) {
-        await FirebaseDatabase.instance
-            .ref('users/${firebaseUser.uid}')
-            .set({
-          'displayName': firebaseUser.displayName ?? firebaseUser.email ?? 'User',
-          'email': firebaseUser.email ?? '',
-          'createdAt': ServerValue.timestamp,
-          'lastSeen': ServerValue.timestamp,
-        });
-        profile = UserModel(
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName ??
-              firebaseUser.email ??
-              'User',
-          email: firebaseUser.email ?? '',
-          createdAt: DateTime.now(),
-        );
+        // New user — collect name first
+        _pendingPhone = phone;
+        _pendingRole = role;
+        Get.offAllNamed(AppRoutes.setupName);
+      } else {
+        await _authService.updateLastSeen(firebaseUser.uid);
+        currentUser.value = profile;
+        _navigateHome(profile.isAdmin);
       }
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
+  /// Called by SetupNameController after the user enters their display name.
+  Future<void> completeSetup(String displayName) async {
+    final firebaseUser = _authService.currentUser;
+    if (firebaseUser == null) return;
+    isLoading.value = true;
+    try {
+      final profile = await _authService.createProfile(
+        uid: firebaseUser.uid,
+        phone: _pendingPhone,
+        role: _pendingRole,
+        displayName: displayName,
+      );
       currentUser.value = profile;
-      if (Get.currentRoute != AppRoutes.usersList) {
-        Get.offAllNamed(AppRoutes.usersList);
-      }
-    }
-  }
-
-  Future<void> signIn(String email, String password) async {
-    try {
-      isLoading.value = true;
-      await _authService.signIn(email: email, password: password);
-    } catch (e) {
-      Get.snackbar('Login Failed', e.toString(),
-          snackPosition: SnackPosition.BOTTOM);
+      _navigateHome(profile.isAdmin);
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> signUp(String email, String password, String displayName) async {
-    try {
-      isLoading.value = true;
-      await _authService.signUp(
-          email: email, password: password, displayName: displayName);
-    } catch (e) {
-      Get.snackbar('Sign Up Failed', e.toString(),
-          snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isLoading.value = false;
-    }
+  void _navigateHome(bool isAdmin) {
+    final target = isAdmin ? AppRoutes.adminHome : AppRoutes.studentHome;
+    if (Get.currentRoute != target) Get.offAllNamed(target);
   }
 
   Future<void> signOut() async {

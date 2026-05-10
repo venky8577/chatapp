@@ -9,43 +9,48 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
 
-  Future<UserModel?> signUp({
-    required String email,
-    required String password,
-    required String displayName,
-  }) async {
-    final cred = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    final uid = cred.user!.uid;
-    await _db.child('users/$uid').set({
-      'displayName': displayName,
-      'email': email,
-      'createdAt': ServerValue.timestamp,
-      'lastSeen': ServerValue.timestamp,
-    });
-    return UserModel(
-      uid: uid,
-      displayName: displayName,
-      email: email,
-      createdAt: DateTime.now(),
-    );
+  /// Reads admin phone numbers from /config/adminPhones in Firebase.
+  /// Store them there (via Firebase Console) as a list or map of E.164 strings.
+  Future<List<String>> fetchAdminPhones() async {
+    final snap = await _db.child('config/adminPhones').get();
+    if (!snap.exists || snap.value == null) return [];
+    final data = snap.value;
+    if (data is List) return data.whereType<String>().toList();
+    if (data is Map) return data.values.whereType<String>().toList();
+    return [];
   }
-
-  Future<UserModel?> signIn({
-    required String email,
-    required String password,
-  }) async {
-    await _auth.signInWithEmailAndPassword(email: email, password: password);
-    return fetchUserProfile(_auth.currentUser!.uid);
-  }
-
-  Future<void> signOut() => _auth.signOut();
 
   Future<UserModel?> fetchUserProfile(String uid) async {
     final snap = await _db.child('users/$uid').get();
     if (!snap.exists) return null;
     return UserModel.fromSnapshot(snap);
   }
+
+  Future<UserModel> createProfile({
+    required String uid,
+    required String phone,
+    required String role,
+    required String displayName,
+  }) async {
+    await _db.child('users/$uid').set({
+      'displayName': displayName,
+      'phone': phone,
+      'role': role,
+      'createdAt': ServerValue.timestamp,
+      'lastSeen': ServerValue.timestamp,
+    });
+    return UserModel(
+      uid: uid,
+      displayName: displayName,
+      phone: phone,
+      role: role,
+      createdAt: DateTime.now(),
+    );
+  }
+
+  Future<void> updateLastSeen(String uid) async {
+    await _db.child('users/$uid/lastSeen').set(ServerValue.timestamp);
+  }
+
+  Future<void> signOut() => _auth.signOut();
 }

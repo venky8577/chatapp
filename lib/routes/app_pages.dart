@@ -1,10 +1,14 @@
 import 'package:get/get.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
-import '../screens/users/users_list_screen.dart';
+import '../screens/auth/setup_name_screen.dart';
+import '../screens/student/student_home_screen.dart';
+import '../screens/admin/admin_home_screen.dart';
 import '../screens/common/chat_room_screen.dart';
-import '../controllers/login_controller.dart';
-import '../controllers/users_list_controller.dart';
+import '../controllers/otp_controller.dart';
+import '../controllers/setup_name_controller.dart';
+import '../controllers/student_home_controller.dart';
+import '../controllers/admin_home_controller.dart';
 import '../controllers/chat_controller.dart';
 import 'app_routes.dart';
 
@@ -16,15 +20,27 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.login,
-      page: () => const LoginScreen(),
+      page: () => const PhoneLoginScreen(),
       binding: BindingsBuilder(
-          () => Get.lazyPut(() => LoginController(), fenix: true)),
+          () => Get.lazyPut(() => OtpController(), fenix: true)),
     ),
     GetPage(
-      name: AppRoutes.usersList,
-      page: () => const UsersListScreen(),
+      name: AppRoutes.setupName,
+      page: () => const SetupNameScreen(),
       binding: BindingsBuilder(
-          () => Get.lazyPut(() => UsersListController(), fenix: true)),
+          () => Get.lazyPut(() => SetupNameController(), fenix: true)),
+    ),
+    GetPage(
+      name: AppRoutes.studentHome,
+      page: () => const StudentHomeScreen(),
+      binding: BindingsBuilder(
+          () => Get.lazyPut(() => StudentHomeController(), fenix: true)),
+    ),
+    GetPage(
+      name: AppRoutes.adminHome,
+      page: () => const AdminHomeScreen(),
+      binding: BindingsBuilder(
+          () => Get.lazyPut(() => AdminHomeController(), fenix: true)),
     ),
     GetPage(
       name: AppRoutes.chatRoom,

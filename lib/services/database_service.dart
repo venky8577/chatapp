@@ -5,16 +5,19 @@ import '../models/message_model.dart';
 class DatabaseService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
 
-  // ── Chat ID helper ─────────────────────────────────────────────────────
   String chatId(String uid1, String uid2) {
     final ids = [uid1, uid2]..sort();
     return '${ids[0]}_${ids[1]}';
   }
 
-  // ── Users ──────────────────────────────────────────────────────────────
-
-  Stream<List<UserModel>> allUsers(String currentUid) {
-    return _db.child('users').onValue.map((event) {
+  // All students — used by admin home screen
+  Stream<List<UserModel>> allStudents(String currentUid) {
+    return _db
+        .child('users')
+        .orderByChild('role')
+        .equalTo('student')
+        .onValue
+        .map((event) {
       final snap = event.snapshot;
       if (!snap.exists || snap.value == null) return [];
       final map = Map<String, dynamic>.from(snap.value as Map);
@@ -26,11 +29,26 @@ class DatabaseService {
     });
   }
 
+  // First admin — used by student home screen
+  Stream<UserModel?> adminUser() {
+    return _db
+        .child('users')
+        .orderByChild('role')
+        .equalTo('admin')
+        .limitToFirst(1)
+        .onValue
+        .map((event) {
+      final snap = event.snapshot;
+      if (!snap.exists || snap.value == null) return null;
+      final map = Map<String, dynamic>.from(snap.value as Map);
+      if (map.isEmpty) return null;
+      return UserModel.fromSnapshot(snap.child(map.keys.first));
+    });
+  }
+
   Future<void> updateLastSeen(String uid) async {
     await _db.child('users/$uid/lastSeen').set(ServerValue.timestamp);
   }
-
-  // ── Messages ───────────────────────────────────────────────────────────
 
   Stream<List<MessageModel>> messages(String cId) {
     return _db
@@ -41,11 +59,10 @@ class DatabaseService {
       final snap = event.snapshot;
       if (!snap.exists || snap.value == null) return [];
       final map = Map<String, dynamic>.from(snap.value as Map);
-      final msgs = map.keys
+      return map.keys
           .map((key) => MessageModel.fromSnapshot(snap.child(key)))
           .toList()
         ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      return msgs;
     });
   }
 
@@ -62,7 +79,6 @@ class DatabaseService {
       'senderName': senderName,
       'createdAt': ServerValue.timestamp,
     });
-    // Update last message metadata for both users
     await _db.child('chats/$cId/lastMessage').set({
       'text': text,
       'senderId': senderId,
@@ -72,14 +88,5 @@ class DatabaseService {
 
   Future<void> deleteMessage(String cId, String messageId) async {
     await _db.child('chats/$cId/messages/$messageId').remove();
-  }
-
-  // ── Recent Chats (for home screen) ────────────────────────────────────
-
-  Stream<Map<String, dynamic>> lastMessage(String cId) {
-    return _db.child('chats/$cId/lastMessage').onValue.map((event) {
-      if (!event.snapshot.exists || event.snapshot.value == null) return {};
-      return Map<String, dynamic>.from(event.snapshot.value as Map);
-    });
   }
 }
