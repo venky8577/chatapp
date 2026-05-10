@@ -122,7 +122,7 @@ class _AdminCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF16213E),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.4)),
+          border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [

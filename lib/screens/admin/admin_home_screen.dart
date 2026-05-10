@@ -106,7 +106,7 @@ class _StudentsList extends StatelessWidget {
       }
       return ListView.separated(
         itemCount: students.length,
-        separatorBuilder: (_, __) =>
+        separatorBuilder: (context, index) =>
             const Divider(color: Colors.white12, height: 1, indent: 72),
         itemBuilder: (_, i) => _StudentTile(students[i], ctrl),
       );
