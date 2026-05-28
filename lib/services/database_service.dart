@@ -29,20 +29,21 @@ class DatabaseService {
     });
   }
 
-  // First admin — used by student home screen
-  Stream<UserModel?> adminUser() {
+  // All admins — used by student home screen
+  Stream<List<UserModel>> adminUsers() {
     return _db
         .child('users')
         .orderByChild('role')
         .equalTo('admin')
-        .limitToFirst(1)
         .onValue
         .map((event) {
       final snap = event.snapshot;
-      if (!snap.exists || snap.value == null) return null;
+      if (!snap.exists || snap.value == null) return [];
       final map = Map<String, dynamic>.from(snap.value as Map);
-      if (map.isEmpty) return null;
-      return UserModel.fromSnapshot(snap.child(map.keys.first));
+      return map.keys
+          .map((key) => UserModel.fromSnapshot(snap.child(key)))
+          .toList()
+        ..sort((a, b) => a.displayName.compareTo(b.displayName));
     });
   }
 

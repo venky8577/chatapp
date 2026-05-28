@@ -20,7 +20,7 @@ class HostelApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'SVH Hostel',
+      title: 'VHostel',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(),
       initialRoute: AppRoutes.splash,

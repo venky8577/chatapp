@@ -1,4 +1,4 @@
-package com.svh.chatapp
+package com.app.svh
 
 import io.flutter.embedding.android.FlutterActivity
 

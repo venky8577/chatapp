@@ -10,9 +10,17 @@ class AuthController extends GetxController {
   final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
   final RxBool isLoading = false.obs;
 
-  // Held between OTP sign-in and name setup for new users
+  // Held between phone login and name setup for new users
   String _pendingPhone = '';
   String _pendingRole = '';
+
+  // Hardcoded admin phone numbers (10-digit, no country code)
+  // TODO: After testing, move to /config/adminPhones in Firebase and
+  //       uncomment fetchAdminPhones() call in _onAuthStateChanged below.
+  static const _adminPhones = ['8341718240', '9000929843', '6302284619'];
+
+  /// Called by OtpController before sign-in so we know the phone for new users.
+  void setPendingPhone(String phone) => _pendingPhone = phone;
 
   @override
   void onInit() {
@@ -31,15 +39,14 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      final adminPhones = await _authService.fetchAdminPhones();
-      final phone = firebaseUser.phoneNumber ?? '';
-      final role = adminPhones.contains(phone) ? 'admin' : 'student';
-
       final profile = await _authService.fetchUserProfile(firebaseUser.uid);
 
       if (profile == null) {
-        // New user — collect name first
-        _pendingPhone = phone;
+        // New user — determine role from hardcoded admin list
+        // TODO: Replace with Firebase fetch after testing:
+        // final adminPhones = await _authService.fetchAdminPhones();
+        // final role = adminPhones.contains(_pendingPhone) ? 'admin' : 'student';
+        final role = _adminPhones.contains(_pendingPhone) ? 'admin' : 'student';
         _pendingRole = role;
         Get.offAllNamed(AppRoutes.setupName);
       } else {

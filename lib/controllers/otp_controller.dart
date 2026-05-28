@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'auth_controller.dart';
 
 enum OtpStep { phoneEntry, otpEntry }
 
@@ -12,15 +13,68 @@ class OtpController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString error = ''.obs;
 
-  String _verificationId = '';
+  // String _verificationId = ''; // uncomment when switching back to OTP
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // TESTING MODE — login by phone number only (no OTP)
+  // NOTE: Enable Email/Password sign-in in Firebase Console first.
+  // To switch to real OTP: delete this block, uncomment the OTP block below.
+  // ═══════════════════════════════════════════════════════════════════════
   Future<void> sendOtp() async {
     final raw = phoneController.text.trim();
     if (raw.isEmpty) {
       error.value = 'Please enter your phone number';
       return;
     }
-    // Prepend +91 if no country code provided
+
+    // Normalise to plain 10-digit number
+    final phone = raw.startsWith('+91')
+        ? raw.replaceFirst('+91', '')
+        : raw.startsWith('+')
+            ? raw.substring(raw.length > 10 ? raw.length - 10 : 0)
+            : raw;
+
+    isLoading.value = true;
+    error.value = '';
+
+    try {
+      // Tell AuthController the phone before sign-in (role check for new users)
+      Get.find<AuthController>().setPendingPhone(phone);
+
+      final email = '$phone@svh.hostel';
+      const password = 'SVHtest@2024';
+
+      try {
+        await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found' ||
+            e.code == 'invalid-credential' ||
+            e.code == 'INVALID_LOGIN_CREDENTIALS' ||
+            e.message?.contains('no user record') == true) {
+          await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(email: email, password: password);
+        } else {
+          rethrow;
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      error.value = e.message ?? 'Login failed. Try again.';
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // REAL OTP MODE — uncomment after testing is done
+  // ═══════════════════════════════════════════════════════════════════════
+  /*
+  Future<void> sendOtp() async {
+    final raw = phoneController.text.trim();
+    if (raw.isEmpty) {
+      error.value = 'Please enter your phone number';
+      return;
+    }
     final phone = raw.startsWith('+') ? raw : '+91$raw';
     isLoading.value = true;
     error.value = '';
@@ -69,8 +123,8 @@ class OtpController extends GetxController {
   Future<void> _signIn(PhoneAuthCredential credential) async {
     await FirebaseAuth.instance.signInWithCredential(credential);
     isLoading.value = false;
-    // AuthController auth-state listener handles profile fetch and navigation
   }
+  */
 
   void goBack() {
     step.value = OtpStep.phoneEntry;

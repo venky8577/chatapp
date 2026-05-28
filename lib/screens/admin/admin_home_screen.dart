@@ -19,7 +19,7 @@ class AdminHomeScreen extends GetView<AdminHomeController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('SVH Hostel — Admin',
+                const Text('VHostel — Admin',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,

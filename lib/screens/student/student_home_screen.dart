@@ -18,7 +18,7 @@ class StudentHomeScreen extends GetView<StudentHomeController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('SVH Hostel',
+                const Text('VHostel',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -43,63 +43,69 @@ class StudentHomeScreen extends GetView<StudentHomeController> {
           return const Center(
               child: CircularProgressIndicator(color: Color(0xFF6C63FF)));
         }
-        final admin = controller.admin.value;
-        if (admin == null) {
+        if (controller.admins.isEmpty) {
           return const Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.support_agent, size: 64, color: Colors.white24),
                 SizedBox(height: 12),
-                Text('No admin available yet.',
+                Text('No admins available yet.',
                     style: TextStyle(color: Colors.white54)),
                 SizedBox(height: 4),
                 Text('Please contact the hostel office.',
-                    style:
-                        TextStyle(color: Colors.white38, fontSize: 12)),
+                    style: TextStyle(color: Colors.white38, fontSize: 12)),
               ],
             ),
           );
         }
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'CONTACT ADMIN',
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Text(
+                'HOSTEL ADMINS',
                 style: TextStyle(
                     color: Colors.white38,
                     fontSize: 12,
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 12),
-              _AdminCard(admin: admin, onTap: controller.openChatWithAdmin),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF16213E),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: Color(0xFF6C63FF), size: 20),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Report hostel maintenance issues, complaints, or requests directly to the admin.',
-                        style:
-                            TextStyle(color: Colors.white70, fontSize: 13),
-                      ),
-                    ),
-                  ],
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: controller.admins.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                itemBuilder: (_, i) => _AdminCard(
+                  admin: controller.admins[i],
+                  onTap: () => controller.openChat(controller.admins[i]),
                 ),
               ),
-            ],
-          ),
+            ),
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF16213E),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline,
+                      color: Color(0xFF6C63FF), size: 20),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Report hostel maintenance issues, complaints, or requests directly to any admin.',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       }),
     );
@@ -127,13 +133,13 @@ class _AdminCard extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              radius: 30,
+              radius: 26,
               backgroundColor: const Color(0xFF6C63FF),
               child: Text(initials,
                   style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 22)),
+                      fontSize: 20)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -149,10 +155,6 @@ class _AdminCard extends StatelessWidget {
                   const Text('Hostel Admin',
                       style: TextStyle(
                           color: Color(0xFF6C63FF), fontSize: 13)),
-                  const SizedBox(height: 2),
-                  const Text('Tap to chat',
-                      style:
-                          TextStyle(color: Colors.white38, fontSize: 12)),
                 ],
               ),
             ),

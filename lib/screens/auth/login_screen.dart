@@ -13,9 +13,12 @@ class PhoneLoginScreen extends GetView<OtpController> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(28),
-            child: Obx(() => controller.step.value == OtpStep.phoneEntry
-                ? _PhoneEntry(controller)
-                : _OtpEntry(controller)),
+            // TESTING MODE: always show phone entry only.
+            // When switching to real OTP, restore the Obx step check:
+            // child: Obx(() => controller.step.value == OtpStep.phoneEntry
+            //     ? _PhoneEntry(controller)
+            //     : _OtpEntry(controller)),
+            child: _PhoneEntry(controller),
           ),
         ),
       ),
@@ -35,14 +38,14 @@ class _PhoneEntry extends StatelessWidget {
         const Icon(Icons.apartment_rounded, size: 72, color: Color(0xFF6C63FF)),
         const SizedBox(height: 16),
         const Text(
-          'SVH Hostel',
+          'VHostel',
           textAlign: TextAlign.center,
           style: TextStyle(
               fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         const SizedBox(height: 4),
         const Text(
-          'Maintenance Portal',
+          'Hostel Maintenance Portal',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, color: Colors.white54),
         ),
@@ -52,11 +55,11 @@ class _PhoneEntry extends StatelessWidget {
           label: 'Phone Number',
           icon: Icons.phone,
           keyboardType: TextInputType.phone,
-          hint: '+91XXXXXXXXXX',
+          hint: 'Enter 10-digit number',
         ),
         const SizedBox(height: 8),
         const Text(
-          'Enter your phone number with country code (+91 added automatically if omitted)',
+          'Enter your 10-digit mobile number',
           style: TextStyle(color: Colors.white38, fontSize: 12),
           textAlign: TextAlign.center,
         ),
@@ -85,7 +88,7 @@ class _PhoneEntry extends StatelessWidget {
                       width: 20,
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
-                  : const Text('Send OTP',
+                  : const Text('Login',
                       style: TextStyle(fontSize: 16, color: Colors.white)),
             )),
       ],
@@ -93,6 +96,8 @@ class _PhoneEntry extends StatelessWidget {
   }
 }
 
+// ── OTP Entry Screen — uncomment when switching to real OTP mode ──────────
+/*
 class _OtpEntry extends StatelessWidget {
   final OtpController ctrl;
   const _OtpEntry(this.ctrl);
@@ -104,64 +109,41 @@ class _OtpEntry extends StatelessWidget {
       children: [
         const Icon(Icons.sms_rounded, size: 64, color: Color(0xFF6C63FF)),
         const SizedBox(height: 16),
-        const Text(
-          'Enter OTP',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+        const Text('Enter OTP',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
         const SizedBox(height: 8),
-        Obx(() => Text(
-              'OTP sent to ${ctrl.phoneController.text.trim()}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white54, fontSize: 13),
-            )),
+        Obx(() => Text('OTP sent to ${ctrl.phoneController.text.trim()}',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white54, fontSize: 13))),
         const SizedBox(height: 32),
-        _inputField(
-          controller: ctrl.otpController,
-          label: '6-digit OTP',
-          icon: Icons.lock_outline,
-          keyboardType: TextInputType.number,
-          maxLength: 6,
-        ),
+        _inputField(controller: ctrl.otpController, label: '6-digit OTP',
+            icon: Icons.lock_outline, keyboardType: TextInputType.number, maxLength: 6),
         const SizedBox(height: 8),
         Obx(() {
           final err = ctrl.error.value;
           if (err.isEmpty) return const SizedBox.shrink();
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(err,
-                style: const TextStyle(color: Colors.redAccent, fontSize: 13),
-                textAlign: TextAlign.center),
-          );
+          return Padding(padding: const EdgeInsets.only(bottom: 12),
+              child: Text(err, style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                  textAlign: TextAlign.center));
         }),
         Obx(() => ElevatedButton(
-              onPressed: ctrl.isLoading.value ? null : ctrl.verifyOtp,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C63FF),
+            onPressed: ctrl.isLoading.value ? null : ctrl.verifyOtp,
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6C63FF),
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
-              child: ctrl.isLoading.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2))
-                  : const Text('Verify OTP',
-                      style: TextStyle(fontSize: 16, color: Colors.white)),
-            )),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            child: ctrl.isLoading.value
+                ? const SizedBox(height: 20, width: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : const Text('Verify OTP', style: TextStyle(fontSize: 16, color: Colors.white)))),
         const SizedBox(height: 12),
-        TextButton(
-          onPressed: ctrl.goBack,
-          child: const Text('Change Phone Number',
-              style: TextStyle(color: Color(0xFF6C63FF))),
-        ),
+        TextButton(onPressed: ctrl.goBack,
+            child: const Text('Change Phone Number', style: TextStyle(color: Color(0xFF6C63FF)))),
       ],
     );
   }
 }
+*/
 
 Widget _inputField({
   required TextEditingController controller,
